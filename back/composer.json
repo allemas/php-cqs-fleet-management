@@ -1,0 +1,20 @@
+{
+  "name": "allema_s/ddd-cqs",
+  "authors": [
+    {
+      "name": "Allemand Sébastien",
+      "email": "sebastienallemand.as@gmail.com"
+    }
+  ],
+  "require": {
+    "phpunit/phpunit": "^9.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "require-dev": {
+    "behat/behat": "^3.7"
+  }
+}
