@@ -42,5 +42,4 @@ class FleetRepository implements FleetRepositoryInterface
     ];
   }
 
-
 }

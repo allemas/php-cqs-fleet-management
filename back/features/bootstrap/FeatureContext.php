@@ -59,7 +59,6 @@ class FeatureContext implements Context
    */
   public function myFleet()
   {
-
     $this->myFleet = $this->fleetOwnerAgregate->getOwnerFleet($this->owner);
 
     \PHPUnit\Framework\assertInstanceOf(
@@ -159,7 +158,8 @@ class FeatureContext implements Context
       $fleet = $this->fleetOwnerAgregate->getOwnerFleet($this->anotherUser);
     } catch (Exception $e) {
     }
-
-
+    
+    $ownerFleet = $this->fleetOwnerAgregate->getOwnerFleet($this->anotherUser);
+    \PHPUnit\Framework\assertArrayHasKey($this->vehicule->getUid(), $ownerFleet->toArray());
   }
 }

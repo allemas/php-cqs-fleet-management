@@ -17,10 +17,6 @@ class FleetOwnerAgregate
     $this->fleetRepository = $fleetRepository;
   }
 
-  public function fetchAll(): array
-  {
-    return $this->fleetRepository->all();
-  }
 
   public function create(Owner $owner)
   {
