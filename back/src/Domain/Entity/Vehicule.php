@@ -29,7 +29,7 @@ class Vehicule
   public function park(Location $location)
   {
     if ($this->location != null && $this->location->getUid() == $location->getUid()) {
-      throw new Exception("Already parked");
+      throw new Exception("Vehicule already parked");
     }
 
     if ($this->location === null) {
@@ -42,7 +42,7 @@ class Vehicule
     if ($this->location != null) {
       return $this->location;
     }
-    throw new Exception("Vehicule " . $this->getUid() . " not parked");
+    throw new Exception("Vehicule  not parked");
   }
 
 

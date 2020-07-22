@@ -21,7 +21,6 @@ class GetFleetFromOwner implements QueryInterface
     return $this->owner;
   }
 
-
   public function __toString()
   {
     return __CLASS__;

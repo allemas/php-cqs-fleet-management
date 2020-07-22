@@ -28,11 +28,8 @@ class ParkVehiculeHandler implements CommandHandlerInternaface
   {
     $vehicule = $this->vehiculeRepository->getFrom($command->vehicule->getUid());
 
-
-
     $vehicule->park($command->location);
 
-
-    return CommandResponse::withValue(1);
+    return CommandResponse::withValue(true);
   }
 }

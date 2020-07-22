@@ -18,7 +18,6 @@ class GetFleetFromOwnerHandler implements QueryHandlerInterface
     $this->fleetRepository = $fleetRepository;
   }
 
-
   public function handle(QueryInterface $command)
   {
     $owner = $command->getOwner();

@@ -11,7 +11,6 @@ class CommandBus implements CommandBusInterface
   public function __construct(iterable $handlers)
   {
     foreach ($handlers as $handler) {
-      print "--->" . $handler->listenTo();
       $this->handlers[$handler->listenTo()] = $handler;
     }
   }

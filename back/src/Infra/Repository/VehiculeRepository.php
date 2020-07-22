@@ -21,7 +21,6 @@ class VehiculeRepository implements VehiculeRepositoryInterface
     if (!array_key_exists($vehicule->getUid(), $this->vehicule)) {
       $this->vehicule[$vehicule->getUid()] = $vehicule;
     }
-
   }
 
   public function fetchAll()

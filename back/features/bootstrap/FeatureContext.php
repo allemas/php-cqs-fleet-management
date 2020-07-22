@@ -15,17 +15,17 @@ class FeatureContext implements Context
   private $owner;
   private $myFleet;
   private $vehicule;
+  private $exception;
+  private $location;
 
 
   private $commandBus;
   private $queryBus;
   private $fleetOwnerAgregate;
-  private $vehiculeRepository;
 
   public function __construct()
   {
     $this->owner = new \App\Domain\Entity\Owner("john");
-
 
     $johnFleet = new \App\Domain\Entity\Fleet();
     $johnFleet->add(new \App\Domain\Entity\Vehicule("Vehicule_A"));
@@ -36,20 +36,19 @@ class FeatureContext implements Context
     ];
 
     $fleetRepository = new \App\Infra\Repository\FleetRepository([$fleetFixture]);
-    $this->vehiculeRepository = new \App\Infra\Repository\VehiculeRepository();
+    $vehiculeRepository = new \App\Infra\Repository\VehiculeRepository();
 
     $this->queryBus = new \App\App\Query\QueryBus();
     $this->queryBus->register(\App\App\Query\GetFleetFromOwner::class, new \App\App\Query\GetFleetFromOwnerHandler($fleetRepository));
     $this->queryBus->register(\App\App\Query\CreateUserQuery::class, new \App\App\Query\CreateUserQueryHandler());
-    $this->queryBus->register(\App\App\Query\CreateVehiculeQuery::class, new \App\App\Query\CreateVehiculeQueryHandler($this->vehiculeRepository));
+    $this->queryBus->register(\App\App\Query\CreateVehiculeQuery::class, new \App\App\Query\CreateVehiculeQueryHandler($vehiculeRepository));
 
     $this->commandBus = new \App\App\Command\CommandBus([
       new \App\App\Command\RegisterVehiculeInFleetOwnerHandler($fleetRepository),
-      new \App\App\Command\ParkVehiculeHandler($this->vehiculeRepository)
+      new \App\App\Command\ParkVehiculeHandler($vehiculeRepository)
     ]);
 
     $this->fleetOwnerAgregate = new \App\Domain\Agregate\FleetOwnerAgregate($fleetRepository);
-
   }
 
   /**
@@ -78,13 +77,11 @@ class FeatureContext implements Context
    */
   public function iRegisterThisVehicleIntoMyFleet()
   {
-
     try {
       $this->commandBus->handle(new \App\App\Command\RegisterVehiculeInFleetOwner($this->owner, $this->vehicule));
     } catch (Exception $e) {
 
     }
-
   }
 
   /**
@@ -107,7 +104,6 @@ class FeatureContext implements Context
     \PHPUnit\Framework\assertArrayHasKey($this->vehicule->getUid(), $ownerFleet->toArray());
   }
 
-  private $exception;
 
   /**
    * @When I try to register this vehicle into my fleet
@@ -131,7 +127,6 @@ class FeatureContext implements Context
   }
 
 
-  private $fleetOfAnotherUser;
   private $anotherUser;
 
   /**
@@ -161,9 +156,6 @@ class FeatureContext implements Context
     $ownerFleet = $this->fleetOwnerAgregate->getOwnerFleet($this->anotherUser);
     \PHPUnit\Framework\assertArrayHasKey($this->vehicule->getUid(), $ownerFleet->toArray());
   }
-
-
-  private $location;
 
   /**
    * @Given a location
@@ -208,7 +200,7 @@ class FeatureContext implements Context
   {
     try {
       $this->commandBus->handle(new \App\App\Command\ParkVehicule($this->location, $this->vehicule));
-    }catch (\Exception $exception){
+    } catch (\Exception $exception) {
       $this->exception = $exception->getMessage();
     }
   }
@@ -218,7 +210,6 @@ class FeatureContext implements Context
    */
   public function iShouldBeInformedThatMyVehicleIsAlreadyParkedAtThisLocation()
   {
-    \PHPUnit\Framework\assertEquals($this->exception, "Already parked");
-
+    \PHPUnit\Framework\assertEquals($this->exception, "Vehicule already parked");
   }
 }

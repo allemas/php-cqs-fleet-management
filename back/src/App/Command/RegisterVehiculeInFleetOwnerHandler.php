@@ -28,6 +28,6 @@ class RegisterVehiculeInFleetOwnerHandler implements CommandHandlerInternaface
     $ownerFleet = $this->fleetRepository->getFrom($command->owner);
     $ownerFleet->add($command->vehicule);
 
-    return CommandResponse::withValue(1);
+    return CommandResponse::withValue(true);
   }
 }

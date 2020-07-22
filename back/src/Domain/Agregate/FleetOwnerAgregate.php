@@ -24,7 +24,6 @@ class FleetOwnerAgregate
     $this->fleetRepository->register($owner, $emptyFleet);
   }
 
-
   public function getOwnerFleet(Owner $owner): Fleet
   {
     return $this->fleetRepository->getFrom($owner);
