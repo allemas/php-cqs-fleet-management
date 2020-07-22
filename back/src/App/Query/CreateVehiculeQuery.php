@@ -7,17 +7,17 @@ namespace App\App\Query;
 class CreateVehiculeQuery implements QueryInterface
 {
 
-  private $label;
+  private $identifier;
 
   public function __construct($label)
   {
-    $this->label = $label;
+    $this->identifier = $label;
 
   }
 
-  public function getName()
+  public function getIdentifier()
   {
-    return $this->label;
+    return $this->identifier;
   }
 
   public function __toString()

@@ -1,7 +1,8 @@
 <?php
 
 
-namespace App\Domain\Vehicule;
+namespace App\Domain\Entity;
+
 
 
 class Vehicule

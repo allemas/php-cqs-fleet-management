@@ -17,27 +17,39 @@ use Behat\Gherkin\Node\TableNode;
  */
 class FeatureContext implements Context
 {
-  private $user;
+  private $owner;
+  private $myFleet;
   private $vehicule;
 
 
   private $commandBus;
   private $queryBus;
+  private $fleetOwnerAgregate;
 
   public function __construct()
   {
+    $this->owner = new \App\Domain\Entity\Owner("john");
+
+    $johnFleet = new \App\Domain\Entity\Fleet();
+    $johnFleet->add(new \App\Domain\Entity\Vehicule("Vehicule_A"));
+
+    $fleetFixture = [
+      "owner" => $this->owner->getName(),
+      "fleet" => $johnFleet
+    ];
+
+    $fleetRepository = new \App\Infra\Repository\FleetRepository([$fleetFixture]);
+    $this->fleetOwnerAgregate = new \App\Domain\Agregate\FleetOwnerAgregate($fleetRepository);
+
     $this->queryBus = new \App\App\Query\QueryBus();
+    $this->queryBus->register(\App\App\Query\GetFleetFromOwner::class, new \App\App\Query\GetFleetFromOwnerHandler($fleetRepository));
     $this->queryBus->register(\App\App\Query\CreateUserQuery::class, new \App\App\Query\CreateUserQueryHandler());
     $this->queryBus->register(\App\App\Query\CreateVehiculeQuery::class, new \App\App\Query\CreateVehiculeQueryHandler());
 
 
-
-
     $this->commandBus = new \App\App\Command\CommandBus([
-      new \App\App\Command\GetUserFleetHandler()
+      new \App\App\Command\RegisterVehiculeInFleetOwnerHandler($fleetRepository)
     ]);
-
-
 
 
   }
@@ -47,8 +59,13 @@ class FeatureContext implements Context
    */
   public function myFleet()
   {
-    $this->user = $this->queryBus->handle(new \App\App\Query\CreateUserQuery("john"));
 
+    $this->myFleet = $this->fleetOwnerAgregate->getOwnerFleet($this->owner);
+
+    \PHPUnit\Framework\assertInstanceOf(
+      \App\Domain\Entity\Fleet::class,
+      $this->myFleet
+    );
   }
 
   /**
@@ -56,8 +73,7 @@ class FeatureContext implements Context
    */
   public function aVehicle()
   {
-    $vehicule = $this->queryBus->handle(new \App\App\Query\CreateVehiculeQuery("toyota"));
-    $this->vehicule = $vehicule;
+    $this->vehicule = $this->queryBus->handle(new \App\App\Query\CreateVehiculeQuery("Vehicule_B"));
   }
 
   /**
@@ -65,7 +81,12 @@ class FeatureContext implements Context
    */
   public function iRegisterThisVehicleIntoMyFleet()
   {
-    $this->user->getFleet()->add($this->vehicule);
+    try {
+      $this->commandBus->handle(new \App\App\Command\RegisterVehiculeInFleetOwner($this->owner, $this->vehicule));
+    } catch (Exception $e) {
+
+    }
+
   }
 
   /**
@@ -73,11 +94,8 @@ class FeatureContext implements Context
    */
   public function thisVehicleShouldBePartOfMyVehicleFleet()
   {
-    \PHPUnit\Framework\assertEquals(
-      $this->user->getFleet()->toArray(),
-      [$this->vehicule]
-    );
-
+    $ownerFleet = $this->fleetOwnerAgregate->getOwnerFleet($this->owner);
+    \PHPUnit\Framework\assertArrayHasKey($this->vehicule->getUid(), $ownerFleet->toArray());
   }
 
   /**
@@ -85,15 +103,13 @@ class FeatureContext implements Context
    */
   public function iHaveRegisteredThisVehicleIntoMyFleet()
   {
-    $this->user->getFleet()->add($this->vehicule);
+    $this->commandBus->handle(new \App\App\Command\RegisterVehiculeInFleetOwner($this->owner, $this->vehicule));
 
-    \PHPUnit\Framework\assertEquals(
-      $this->user->getFleet()->toArray(),
-      [$this->vehicule]
-    );
-
-
+    $ownerFleet = $this->fleetOwnerAgregate->getOwnerFleet($this->owner);
+    \PHPUnit\Framework\assertArrayHasKey($this->vehicule->getUid(), $ownerFleet->toArray());
   }
+
+  private $exception;
 
   /**
    * @When I try to register this vehicle into my fleet
@@ -101,11 +117,10 @@ class FeatureContext implements Context
   public function iTryToRegisterThisVehicleIntoMyFleet()
   {
     try {
-      $this->user->getFleet()->add($this->vehicule);
+      $this->commandBus->handle(new \App\App\Command\RegisterVehiculeInFleetOwner($this->owner, $this->vehicule));
     } catch (Exception $e) {
+      $this->exception = $e;
     }
-
-
   }
 
   /**
@@ -113,28 +128,24 @@ class FeatureContext implements Context
    */
   public function iShouldBeInformedThisThisVehicleHasAlreadyBeenRegisteredIntoMyFleet()
   {
-
-    try {
-      $this->user->getFleet()->add($this->vehicule);
-    } catch (Exception $e) {
-      \PHPUnit\Framework\assertEquals(
-        "Vehicule already registred",
-        $e->getMessage()
-      );
-    }
-
+    \PHPUnit\Framework\assertInstanceOf(Exception::class, $this->exception);
+    \PHPUnit\Framework\assertEquals("Vehicule already registred", $this->exception->getMessage());
   }
 
 
   private $fleetOfAnotherUser;
+  private $anotherUser;
 
   /**
    * @Given the fleet of another user
    */
   public function theFleetOfAnotherUser()
   {
-    $user = $this->queryBus->handle(new \App\App\Query\CreateUserQuery("john"));
-    $this->fleetOfAnotherUser = $user->getFleet();
+    $this->anotherUser = new \App\Domain\Entity\Owner("john");
+    try {
+      $this->fleetOwnerAgregate->create($this->anotherUser);
+    } catch (Exception $e) {
+    }
   }
 
   /**
@@ -142,7 +153,12 @@ class FeatureContext implements Context
    */
   public function thisVehicleHasBeenRegisteredIntoTheOtherUsersFleet()
   {
-    $this->fleetOfAnotherUser->add($this->vehicule);
+
+    try {
+      $this->commandBus->handle(new \App\App\Command\RegisterVehiculeInFleetOwner($this->anotherUser, $this->vehicule));
+      $fleet = $this->fleetOwnerAgregate->getOwnerFleet($this->anotherUser);
+    } catch (Exception $e) {
+    }
 
 
   }

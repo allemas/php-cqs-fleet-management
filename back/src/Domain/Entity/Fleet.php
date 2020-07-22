@@ -1,10 +1,8 @@
 <?php
 
 
-namespace App\Domain\User;
+namespace App\Domain\Entity;
 
-
-use App\Domain\Vehicule\Vehicule;
 
 class Fleet
 {
@@ -19,10 +17,10 @@ class Fleet
   public function add(Vehicule $vehiculeAdded)
   {
     if (in_array($vehiculeAdded, $this->vehicules)) {
-      throw new AlreadyRegistredVehicule("Vehicule already registred");
+      throw new \Exception("Vehicule already registred");
     }
 
-    $this->vehicules[] = $vehiculeAdded;
+    $this->vehicules[$vehiculeAdded->getUid()] = $vehiculeAdded;
   }
 
   public function toArray()
