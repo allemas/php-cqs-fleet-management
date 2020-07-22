@@ -21,7 +21,6 @@ class FleetOwnerAgregate
   public function create(Owner $owner)
   {
     $emptyFleet = new Fleet();
-
     $this->fleetRepository->register($owner, $emptyFleet);
   }
 
